@@ -1,0 +1,70 @@
+{
+  "variables":
+    {
+      "ssh_name": "gfdev",
+      "ssh_pass": "gfdev",
+      "hostname": "ub64-gfdev"
+    },
+
+  "provisioners": [
+    {
+      "type": "shell",
+      "scripts": [
+        "ubuntu_64/root_setup.sh"
+      ],
+      "override": {
+        "virtualbox-iso": {
+          "execute_command": "echo {{user `ssh_pass`}} | sudo -S sh '{{ .Path }}'"
+        }
+      }
+    }
+  ],
+
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "guest_os_type": "Ubuntu_64",
+      "vm_name": "GF-Base",
+      "virtualbox_version_file": ".vbox_version",
+      "format": "ova",
+      "output_directory": "output-virtualbox-image",
+
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--vram", "256"],
+        ["modifyvm", "{{.Name}}", "--memory", "2048"]
+      ],
+
+      "headless": false,
+      "disk_size" : 20000,
+
+      "iso_url": "http://releases.ubuntu.com/14.04.1/ubuntu-14.04.1-server-amd64.iso",
+      "iso_checksum": "ca2531b8cd79ea5b778ede3a524779b9",
+      "iso_checksum_type": "md5",
+
+      
+      "http_directory" : "ubuntu_64",
+      "http_port_min" : 9001,
+      "http_port_max" : 9001,
+
+      "ssh_username": "{{user `ssh_name`}}",
+      "ssh_password": "{{user `ssh_pass`}}",
+      "ssh_wait_timeout": "20m",
+
+      "shutdown_command": "echo {{user `ssh_pass`}} | sudo -S shutdown -P now",
+
+      "boot_command" : [
+        "<esc><esc><enter>",
+        "/install/vmlinuz noapic ",
+        "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
+        "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+        "hostname={{user `hostname`}} ",
+        "fb=false debconf/frontend=noninteractive ",
+        "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+        "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+        "initrd=/install/initrd.gz -- <enter>"
+      ],
+      "boot_wait": "10s"
+    }
+  ]
+}
+
